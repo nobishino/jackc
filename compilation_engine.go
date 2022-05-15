@@ -46,4 +46,5 @@ func (e *CompilationEngine) CompileExpression() {}
 // termをコンパイルする
 func (e *CompilationEngine) CompileTerm() {}
 
+// こんまで分離された式のリスト(空の可能性もある)をコンパイルする
 func (e *CompilationEngine) CompileExpressionList() {}
