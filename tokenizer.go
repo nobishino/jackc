@@ -62,6 +62,7 @@ func (t *Tokenizer) Advance() {
 		TokenType: KEYWORD,
 		Value:     tk,
 	}
+	// identifiers
 }
 
 // should not be called if !t.eof
