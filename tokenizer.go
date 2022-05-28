@@ -2,27 +2,30 @@ package jackc
 
 import "io"
 
-type Tokenizer struct{}
+type Tokenizer struct {
+	count int
+}
 
 // 入力ファイル/ストリームを開き、トークン化を行う準備をする
 func NewTokenizer(r io.Reader) *Tokenizer {
-	return nil
+	return &Tokenizer{}
 }
 
 // 入力にまだトークンは存在するか?
 func (t *Tokenizer) HasMoreTokens() bool {
-	return true
+	return t.count == 0
 }
 
 // 入力から次のトークンを取得し、それを現在のトークン(現トークン)する。
 // このルーチンは、hasMoreTokens()がTrueの場合のみ呼び出すことができる。
 // また、最初は現トークンは設定されていない
-func (t *Tokenizer) Advance() {}
+func (t *Tokenizer) Advance() {
+	t.count = t.count + 1
+}
 
 // 現トークンの種類を返す
 func (t *Tokenizer) TokenType() TokenType {
-	var v TokenType
-	return v
+	return KEYWORD
 }
 
 // 現トークンのキーワードを返す。このルーチンは、tokenType()がKEYWORDの場合のみ呼び出すことができる
