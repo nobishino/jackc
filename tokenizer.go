@@ -1,31 +1,113 @@
 package jackc
 
-import "io"
+import (
+	"bufio"
+	"io"
+	"strings"
+)
+
+type Token struct {
+	TokenType
+	Value string
+}
 
 type Tokenizer struct {
-	count int
+	reader        *bufio.Reader
+	hasMoreTokens bool
+	currentToken  Token
+	currentRune   rune
+	eof           bool
 }
 
 // 入力ファイル/ストリームを開き、トークン化を行う準備をする
 func NewTokenizer(r io.Reader) *Tokenizer {
-	return &Tokenizer{}
+	buf := bufio.NewReader(r)
+	return &Tokenizer{
+		reader:        buf,
+		hasMoreTokens: true,
+	}
 }
 
 // 入力にまだトークンは存在するか?
 func (t *Tokenizer) HasMoreTokens() bool {
-	return t.count == 0
+	return t.hasMoreTokens
 }
 
 // 入力から次のトークンを取得し、それを現在のトークン(現トークン)する。
 // このルーチンは、hasMoreTokens()がTrueの場合のみ呼び出すことができる。
 // また、最初は現トークンは設定されていない
 func (t *Tokenizer) Advance() {
-	t.count = t.count + 1
+	if !t.HasMoreTokens() {
+		panic("Advance must not be called if !HasMoreTokens")
+	}
+	if t.eof {
+		t.hasMoreTokens = false
+		return
+	}
+	t.skipDelimiters()
+	r := t.currentRune
+	// symbol
+	if t.isSymbol(r) {
+		t.currentToken = Token{
+			TokenType: SYMBOL,
+			Value:     string(r),
+		}
+		return
+	}
+	tk := t.readWord()
+	// intergerConstant
+	// stringConstant
+	// keyword
+	t.currentToken = Token{
+		TokenType: KEYWORD,
+		Value:     tk,
+	}
+}
+
+// should not be called if !t.eof
+func (t *Tokenizer) advanceRune() {
+	if t.eof {
+		panic("advanceRune invoked at EOF")
+	}
+	r, _, err := t.reader.ReadRune()
+	if err == io.EOF {
+		t.eof = true
+		return
+	}
+	if err != nil {
+		panic(err)
+	}
+	t.currentRune = r
+}
+
+// readWord reads current word
+// at the end of this, t.isDelimiters() == true
+func (t *Tokenizer) readWord() string {
+	var result []rune
+	for !t.eof && !t.isDelimiters() {
+		result = append(result, t.currentRune)
+		t.advanceRune()
+	}
+	return string(result)
+}
+
+func (t *Tokenizer) skipDelimiters() {
+	for !t.eof && t.isDelimiters() {
+		t.advanceRune()
+	}
+}
+
+func (t *Tokenizer) isDelimiters() bool {
+	return strings.ContainsRune(" \n\t\r\x00", t.currentRune)
+}
+
+func (t *Tokenizer) isSymbol(r rune) bool {
+	return strings.ContainsRune("{}()[].,;+-*/&|<>=~", r)
 }
 
 // 現トークンの種類を返す
 func (t *Tokenizer) TokenType() TokenType {
-	return KEYWORD
+	return t.currentToken.TokenType
 }
 
 // 現トークンのキーワードを返す。このルーチンは、tokenType()がKEYWORDの場合のみ呼び出すことができる
