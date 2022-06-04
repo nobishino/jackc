@@ -45,10 +45,19 @@ func (t *Tokenizer) Advance() {
 	if !t.HasMoreTokens() {
 		panic("Advance must not be called if !HasMoreTokens")
 	}
+	defer func() {
+		// Advanceが終わった時点で次のtokenの先頭かもしくはt.eof == true
+		t.skipDelimiters()
+		if t.eof {
+			t.hasMoreTokens = false
+		}
+	}()
 	if t.currentRune == 0 { // 1文字もloadしていない状態に対応する
 		t.advanceRune()
 	}
 	r := t.currentRune // rは次トークンの先頭文字になっている
+
+	// TokenTypeを分類する
 	// symbol
 	if t.isSymbol(r) {
 		t.currentToken = Token{
@@ -69,11 +78,6 @@ func (t *Tokenizer) Advance() {
 		Value:     tk,
 	}
 	// identifiers
-	// Advanceが終わった時点で次のtokenの先頭かもしくはt.eof == true
-	t.skipDelimiters()
-	if t.eof {
-		t.hasMoreTokens = false
-	}
 }
 
 // should not be called if t.eof
