@@ -17,12 +17,12 @@ func TestTokenizer(t *testing.T) {
 		{`method`, 1},
 		{`}`, 1},
 		{`{}`, 2},
-		{`Class Bar {
-	method Fraction foo(int y) {
-		var int temp;
-		let temp = (xxx+12)*-63;
-	}
-}`, 4},
+		// 		{`Class Bar {
+		// 	method Fraction foo(int y) {
+		// 		var int temp;
+		// 		let temp = (xxx+12)*-63;
+		// 	}
+		// }`, 4},
 	}
 
 	for _, tc := range cases {
