@@ -29,6 +29,7 @@ func NewTokenizer(r io.Reader) *Tokenizer {
 }
 
 // 入力にまだトークンは存在するか?
+// tの状態を変えない
 func (t *Tokenizer) HasMoreTokens() bool {
 	return t.hasMoreTokens
 }
@@ -36,21 +37,26 @@ func (t *Tokenizer) HasMoreTokens() bool {
 // 入力から次のトークンを取得し、それを現在のトークン(現トークン)する。
 // このルーチンは、hasMoreTokens()がTrueの場合のみ呼び出すことができる。
 // また、最初は現トークンは設定されていない
+//
+// 呼び出し時の条件: 次トークンの先頭文字をload済みであるか、まだ1文字もloadしていない
+//
+// 完了時の条件: そのさらに次トークンの先頭の先頭文字をload済みであるか、もしくはt.eof == trueである
 func (t *Tokenizer) Advance() {
 	if !t.HasMoreTokens() {
 		panic("Advance must not be called if !HasMoreTokens")
 	}
-	if t.eof {
-		t.hasMoreTokens = false
-		return
+	if t.currentRune == 0 { // 1文字もloadしていない状態に対応する
+		t.advanceRune()
 	}
-	t.skipDelimiters()
-	r := t.currentRune
+	r := t.currentRune // rは次トークンの先頭文字になっている
 	// symbol
 	if t.isSymbol(r) {
 		t.currentToken = Token{
 			TokenType: SYMBOL,
 			Value:     string(r),
+		}
+		if !t.eof {
+			t.advanceRune()
 		}
 		return
 	}
@@ -63,9 +69,14 @@ func (t *Tokenizer) Advance() {
 		Value:     tk,
 	}
 	// identifiers
+	// Advanceが終わった時点で次のtokenの先頭かもしくはt.eof == true
+	t.skipDelimiters()
+	if t.eof {
+		t.hasMoreTokens = false
+	}
 }
 
-// should not be called if !t.eof
+// should not be called if t.eof
 func (t *Tokenizer) advanceRune() {
 	if t.eof {
 		panic("advanceRune invoked at EOF")
@@ -73,6 +84,8 @@ func (t *Tokenizer) advanceRune() {
 	r, _, err := t.reader.ReadRune()
 	if err == io.EOF {
 		t.eof = true
+		t.hasMoreTokens = false
+		t.currentRune = 0
 		return
 	}
 	if err != nil {
@@ -118,8 +131,7 @@ func (t *Tokenizer) KeyWord() Keyword {
 
 // 現トークンの文字を返す。このルーチンは、tokenType()がSYMBOLの場合に呼び出すことができる
 func (t *Tokenizer) Symbol() Symbol {
-	var s Symbol
-	return s
+	return Symbol([]rune(t.currentToken.Value)[0])
 }
 
 // Identifierは、現トークンの識別子を返す。tokenType()がÍIDENTIFIERの場合のみ呼び出せる

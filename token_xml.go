@@ -17,20 +17,25 @@ func TokenizeToXML(w io.Writer, r io.Reader) error {
 		return errors.WithStack(err)
 	}
 
-	tokenizer.Advance()
-	for tokenizer.HasMoreTokens() {
+	for {
+		if !tokenizer.HasMoreTokens() {
+			break
+		}
+		tokenizer.Advance()
 		var line string
 		switch tp := tokenizer.TokenType(); tp {
 		case KEYWORD:
 			kw := strings.ToLower(string(tokenizer.KeyWord()))
 			line = fmt.Sprintf("<keyword> %s </keyword>", kw)
+		case SYMBOL:
+			symbol := string(tokenizer.Symbol())
+			line = fmt.Sprintf("<symbol> %s </symbol>", symbol)
 		default:
 			return errors.Errorf("unexpected type: %q", tp)
 		}
 		if _, err := fmt.Fprintln(w, line); err != nil {
 			return errors.WithStack(err)
 		}
-		tokenizer.Advance()
 	}
 	if _, err := fmt.Fprintln(w, endTag); err != nil {
 		return errors.WithStack(err)
