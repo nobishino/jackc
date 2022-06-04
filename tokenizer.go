@@ -113,8 +113,7 @@ func (t *Tokenizer) TokenType() TokenType {
 
 // 現トークンのキーワードを返す。このルーチンは、tokenType()がKEYWORDの場合のみ呼び出すことができる
 func (t *Tokenizer) KeyWord() Keyword {
-	var v Keyword
-	return v
+	return Keyword(strings.ToUpper(t.currentToken.Value))
 }
 
 // 現トークンの文字を返す。このルーチンは、tokenType()がSYMBOLの場合に呼び出すことができる
