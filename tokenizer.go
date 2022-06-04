@@ -102,7 +102,7 @@ func (t *Tokenizer) advanceRune() {
 // at the end of this, t.isDelimiters() == true
 func (t *Tokenizer) readWord() string {
 	var result []rune
-	for !t.eof && !t.isDelimiters() {
+	for !t.eof && !t.isDelimiters() && !t.isSymbol(t.currentRune) {
 		result = append(result, t.currentRune)
 		t.advanceRune()
 	}
