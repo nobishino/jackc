@@ -42,7 +42,10 @@ func (a Analyzer) TokenizeFile(path string) error {
 	}
 	defer src.Close()
 
-	t := NewTokenizer(src)
+	t, err := NewTokenizer(src)
+	if err != nil {
+		return err
+	}
 
 	for t.HasMoreTokens() {
 		switch typ := t.TokenType(); typ {
