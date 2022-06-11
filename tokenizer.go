@@ -2,7 +2,9 @@ package jackc
 
 import (
 	"bufio"
+	"fmt"
 	"io"
+	"strconv"
 	"strings"
 )
 
@@ -74,14 +76,38 @@ func (t *Tokenizer) Advance() {
 		return
 	}
 	tk := t.readWord()
+	switch {
 	// intergerConstant
 	// stringConstant
 	// keyword
-	t.currentToken = Token{
-		TokenType: KEYWORD,
-		Value:     tk,
+	case isKeyword(tk):
+		t.currentToken = Token{
+			TokenType: KEYWORD,
+			Value:     tk,
+		}
+	case isIdentifier(tk):
+		// identifiers
+		t.currentToken = Token{
+			TokenType: IDENTIFIER,
+			Value:     tk,
+		}
+	default:
+		panic(fmt.Sprintf("current token value = %q", tk))
 	}
-	// identifiers
+}
+
+func isIdentifier(s string) bool {
+	return len(s) > 0
+}
+
+func isKeyword(s string) bool {
+	switch s {
+	case "class", "constructor", "function", "method", "field", "static",
+		"var", "int", "char", "boolean", "void", "true",
+		"false", "null", "this", "let", "do", "if", "else", "while", "return":
+		return true
+	}
+	return false
 }
 
 // should not be called if t.eof
@@ -103,7 +129,7 @@ func (t *Tokenizer) advanceRune() {
 }
 
 // readWord reads current word
-// at the end of this, t.isDelimiters() == true
+// at the end of this, t.isDelimiters() == true or t.isSymbol(t.currentRune)
 func (t *Tokenizer) readWord() string {
 	var result []rune
 	for !t.eof && !t.isDelimiters() && !t.isSymbol(t.currentRune) {
@@ -144,17 +170,30 @@ func (t *Tokenizer) Symbol() Symbol {
 
 // Identifierは、現トークンの識別子を返す。tokenType()がÍIDENTIFIERの場合のみ呼び出せる
 func (t *Tokenizer) Identifier() string {
-	return ""
+	if tp := t.currentToken.TokenType; tp != IDENTIFIER {
+		panic(fmt.Sprintf("current token type should be %q, but got %q", IDENTIFIER, tp))
+	}
+	return t.currentToken.Value
 }
 
 // Intval は、現トークンの整数の値を返す。tokenType() == INT_VALのときのみ呼び出せる。
 func (t *Tokenizer) IntVal() int {
-	return 0
+	if tp := t.currentToken.TokenType; tp != INT_CONST {
+		panic(fmt.Sprintf("current token type should be %q, but got %q", INT_CONST, tp))
+	}
+	v, err := strconv.Atoi(t.currentToken.Value)
+	if err != nil {
+		panic(err)
+	}
+	return v
 }
 
 // StringVal は、現トークンの文字列値をかえす。tokenType() == STRING_VALのときのみ呼び出せる。
 func (t *Tokenizer) StringVal() string {
-	return ""
+	if tp := t.currentToken.TokenType; tp != STRING_CONST {
+		panic(fmt.Sprintf("current token type should be %q, but got %q", STRING_CONST, tp))
+	}
+	return t.currentToken.Value
 }
 
 // TokenType represents token types

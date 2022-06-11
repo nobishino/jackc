@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -22,7 +21,6 @@ func FilterComments(r io.Reader) (*bytes.Buffer, error) {
 			return nil, errors.WithStack(err)
 		}
 	}
-	// return &result, nil
 	result2, err := filterLongComments(&result)
 	if err != nil {
 		return nil, err
@@ -46,7 +44,6 @@ func filterLongComments(rd io.Reader) (*bytes.Buffer, error) {
 	}
 	advance := func(c rune) error {
 		r[0], r[1], r[2], r[3] = c, r[0], r[1], r[2]
-		log.Println(inComment, string(r[2]))
 		if shouldWrite() {
 			_, err := result.WriteRune(r[2])
 			if err != nil {

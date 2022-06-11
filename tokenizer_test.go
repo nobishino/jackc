@@ -17,6 +17,7 @@ func TestTokenizer(t *testing.T) {
 		{`method`, 1},
 		{`}`, 1},
 		{`{}`, 2},
+		{`var int x;`, 4},
 		{`let temp = (xxx+12)*-63;`, 12},
 		{`Class Bar {
 	method Add3(int y) {
@@ -69,6 +70,24 @@ func TestTokenizeToXML(t *testing.T) {
 			src: `{`,
 			want: `<tokens>
 <symbol> { </symbol>
+</tokens>
+`,
+		},
+		{
+			src: "class constructor // function method field static var int char boolean void true false null this let do if else while return",
+			want: `<tokens>
+<keyword> class </keyword>
+<keyword> constructor </keyword>
+</tokens>
+`,
+		},
+		{
+			src: "var int x;",
+			want: `<tokens>
+<keyword> var </keyword>
+<keyword> int </keyword>
+<identifier> x </identifier>
+<symbol> ; </symbol>
 </tokens>
 `,
 		},

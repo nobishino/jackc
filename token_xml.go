@@ -3,6 +3,7 @@ package jackc
 import (
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -21,6 +22,7 @@ func TokenizeToXML(w io.Writer, r io.Reader) error {
 	}
 
 	for {
+		log.Println(tokenizer.HasMoreTokens())
 		if !tokenizer.HasMoreTokens() {
 			break
 		}
@@ -33,9 +35,13 @@ func TokenizeToXML(w io.Writer, r io.Reader) error {
 		case SYMBOL:
 			symbol := string(tokenizer.Symbol())
 			line = fmt.Sprintf("<symbol> %s </symbol>", symbol)
+		case IDENTIFIER:
+			ident := tokenizer.Identifier()
+			line = fmt.Sprintf("<identifier> %s </identifier>", ident)
 		default:
 			return errors.Errorf("unexpected type: %q", tp)
 		}
+		log.Println(line)
 		if _, err := fmt.Fprintln(w, line); err != nil {
 			return errors.WithStack(err)
 		}
