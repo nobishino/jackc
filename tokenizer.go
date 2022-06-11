@@ -20,12 +20,16 @@ type Tokenizer struct {
 }
 
 // 入力ファイル/ストリームを開き、トークン化を行う準備をする
-func NewTokenizer(r io.Reader) *Tokenizer {
-	buf := bufio.NewReader(r)
+func NewTokenizer(r io.Reader) (*Tokenizer, error) {
+	b, err := FilterComments(r)
+	if err != nil {
+		return nil, err
+	}
+	buf := bufio.NewReader(b)
 	return &Tokenizer{
 		reader:        buf,
 		hasMoreTokens: true,
-	}
+	}, nil
 }
 
 // 入力にまだトークンは存在するか?

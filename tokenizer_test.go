@@ -23,12 +23,23 @@ func TestTokenizer(t *testing.T) {
 		return 3+y;
 	}
 }`, 17},
+		{`Class Bar { // comment
+			/* comment
+			comment
+			*/
+	method Add3(int y) {
+		return 3+y;
+	}
+}`, 17},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.src, func(t *testing.T) {
 			src := strings.NewReader(tc.src)
-			tokenizer := jackc.NewTokenizer(src)
+			tokenizer, err := jackc.NewTokenizer(src)
+			if err != nil {
+				t.Fatal(err)
+			}
 			var got int
 			for {
 				if !tokenizer.HasMoreTokens() {

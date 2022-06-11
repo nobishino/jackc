@@ -9,7 +9,10 @@ import (
 )
 
 func TokenizeToXML(w io.Writer, r io.Reader) error {
-	tokenizer := NewTokenizer(r)
+	tokenizer, err := NewTokenizer(r)
+	if err != nil {
+		return err
+	}
 	const startTag = "<tokens>"
 	const endTag = "</tokens>"
 
